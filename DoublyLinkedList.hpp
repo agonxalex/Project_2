@@ -123,19 +123,22 @@ namespace CPSC131
 						///	Get a pointer to the head node, or end() if this list is empty
 						Node<T>* begin()
 						{
-							
+							if (head_ == nullptr){
+								return this->end();
+							}
+							return this->head_;
 						}
 						
 						///	Get a node pointer representing "end" (aka "depleted"). Probably want to just use nullptr.
 						Node<T>* end()
 						{
-							
+							return nullptr;
 						}
 						
 						///	Get the node to which this iterator is currently pointing
 						Node<T>* getCursor()
 						{
-							
+							return this->cursor_;
 						}
 						
 						/**
@@ -144,18 +147,30 @@ namespace CPSC131
 						 */
 						Iterator& operator=(const Iterator& other)
 						{
-							
+							this->head_ = other.head_;
+							this->cursor_ = other.cursor_;
+							this->tail_ = other.tail_;
+							return *this;
 						}
 						
 						///	Comparison operator
 						bool operator==(const Iterator& other)
 						{
-							
+							if (
+								this->head_ == other.head_ &&
+								this->cursor_ == other.cursor_ &&
+								this->tail_ == other.tail_
+							)
+							{
+								return true;
+							}
+							return false;
 						}
 						///	Inequality comparison operator
 						bool operator!=(const Iterator& other)
 						{
 							
+							return !(*this == other);
 						}
 						
 						/**
@@ -164,7 +179,8 @@ namespace CPSC131
 						 */
 						Iterator& operator++()
 						{
-							
+							cursor_ = cursor_->getNext();
+							return *this;
 						}
 						
 						/**
@@ -173,7 +189,9 @@ namespace CPSC131
 						 */
 						Iterator operator++(int)
 						{
-							
+							Iterator temp = *this;
+							cursor_ = cursor_->getNext();
+							return temp;
 						}
 						
 						/**
@@ -182,7 +200,8 @@ namespace CPSC131
 						 */
 						Iterator& operator--()
 						{
-							
+							cursor_ = cursor_->getPrev();
+							return *this;
 						}
 						
 						/**
@@ -191,7 +210,9 @@ namespace CPSC131
 						 */
 						Iterator operator--(int)
 						{
-							
+							Iterator temp = *this;
+							this->cursor_ = cursor_->getPrev();
+							return temp;
 						}
 						
 						/**
@@ -200,7 +221,13 @@ namespace CPSC131
 						*/
 						Iterator operator +=(size_t add)
 						{
-							
+							for (size_t i = 0; i != add; i++){
+								if (cursor_->getNext() == nullptr){
+									return *this;
+								}
+								cursor_ = cursor_->getNext();
+							}
+							return *this;
 						}
 						/**
 						 * SubtractionAssignment operator
@@ -208,7 +235,10 @@ namespace CPSC131
 						 */
 						Iterator operator -=(size_t add)
 						{
-							
+							for (size_t i = 0; i < add; i++){
+								this->cursor_ = cursor_->getPrev();
+							}
+							return *this;
 						}
 						
 						/**
@@ -216,7 +246,12 @@ namespace CPSC131
 						 */
 						Iterator operator +=(int add)
 						{
-							
+							while (add != 0) {
+								if (cursor_ == nullptr) { return *this; }
+								cursor_ = cursor_->getNext();
+								--add;
+							}
+							return *this;
 						}
 						
 						/**
@@ -224,7 +259,10 @@ namespace CPSC131
 						 */
 						Iterator operator -=(int subtract)
 						{
-							
+							for (int i = 0; i < subtract; i++){
+								this->cursor_ = cursor_->getPrev();
+							}
+							return *this;	
 						}
 						
 						/**
@@ -232,7 +270,7 @@ namespace CPSC131
 						 */
 						T& operator*()
 						{
-							
+							return cursor_->getElement();
 						}
 					
 					private:
@@ -265,7 +303,9 @@ namespace CPSC131
 				///	Copy Constructor
 				DoublyLinkedList(DoublyLinkedList& other)
 				{
-					
+					this->head_ = other.head();
+					this->tail_ = other.tail();
+					this->size_ = other.size();
 				}
 				
 				/// DTOR: Your welcome
@@ -281,7 +321,10 @@ namespace CPSC131
 				 */
 				void assign(size_t count, const T& value)
 				{
-					
+					this->clear();
+					for (size_t i = 0; i < count; i++){
+						this->push_back(value);
+					}
 				}
 				
 				/**
@@ -302,21 +345,31 @@ namespace CPSC131
 				 */
 				void assign(Iterator first, Iterator last)
 				{
-					
+					this->clear();
+					for (Iterator itr = first; itr != last++ || itr != first.end(); ++itr){
+						this->push_back(*itr);
+					}
 				}
 				
 				/// Return a pointer to the head node, if any
-				Node<T>* head() { return nullptr; }
+				Node<T>* head() {return this->head_;}
 				
 				/// Return a pointer to the tail node, if any
-				Node<T>* tail() { return nullptr; }
+				Node<T>* tail() {return this->tail_;}
 				
+				/*Intializes the first element in a list*/
+				void firstElementInit (const T& value){
+					head_ = new Node<T>(value);
+					tail_ = head_;
+					++size_;
+				}
+
 				/**
 				 * Return an iterator that points to the head of our list
 				 */
 				Iterator begin()
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					return Iterator(head_, tail_, head_);
 				}
 				
 				/**
@@ -324,7 +377,7 @@ namespace CPSC131
 				 */
 				Iterator last()
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					return Iterator(head_, tail_, tail_);
 				}
 				
 				/**
@@ -335,7 +388,7 @@ namespace CPSC131
 				 */
 				Iterator end()
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					return Iterator(head_, tail_);
 				}
 				
 				/**
@@ -343,7 +396,7 @@ namespace CPSC131
 				 */
 				bool empty() const
 				{
-					
+					return size_ == 0;
 				}
 				
 				/**
@@ -353,7 +406,7 @@ namespace CPSC131
 				 */
 				size_t size() const
 				{
-					return 0;
+					return size_;
 				}
 				
 				/**
@@ -362,7 +415,10 @@ namespace CPSC131
 				 */
 				void clear()
 				{
-					
+					while (this->empty() == false)
+					{
+						this->pop_back();
+					}
 				}
 				
 				/**
@@ -380,7 +436,24 @@ namespace CPSC131
 				 */
 				Iterator insert_after(Iterator pos, const T& value)
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					if (this->empty()){
+						this->firstElementInit(value);
+						return this->begin();
+					} else if (pos == this->end()){
+						pos = this->begin();
+						pos += size_-1;
+						pos.getCursor()->setNext(new Node<T>(value, pos.getCursor(), nullptr));
+						tail_ = pos.getCursor()->getNext();
+						++size_;
+						return ++pos;
+					} else{
+						if (pos.getCursor()->getNext() != nullptr) { 
+							pos.getCursor()->getNext()->setPrev(new Node<T>(value, pos.getCursor(), pos.getCursor()->getNext()));
+						}
+						pos.getCursor()->setNext(pos.getCursor()->getNext()->getPrev());
+						++size_;
+						return ++pos;
+					}
 				}
 				
 				/**
@@ -395,7 +468,9 @@ namespace CPSC131
 				*/
 				Iterator insert_after(size_t pos, const T& value)
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					Iterator itr = this->begin();
+					itr += pos;
+					return insert_after(itr, value);
 				}
 				
 				/**
@@ -409,7 +484,25 @@ namespace CPSC131
 				 */
 				Iterator erase(Iterator pos)
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					//Node<T>* cursor = pos.getCursor();
+					if (pos == this->end()){
+						throw std::range_error("This is an invalid node.");
+					}
+					if (pos == this->last()){
+						tail_ = pos.getCursor()->getPrev();
+						delete pos.getCursor();
+						--size_;
+						return this->end();
+					} else{
+						pos.getCursor()->getPrev()->setNext(pos.getCursor()->getNext());
+						++pos;
+						Node<T>* prev = pos.getCursor()->getPrev();
+						pos.getCursor()->setPrev(prev->getPrev());
+						delete prev;
+						prev = nullptr;
+						--size_;
+						return pos;
+					}
 				}
 				
 				/**
@@ -419,7 +512,7 @@ namespace CPSC131
 				 */
 				Iterator push_after(Iterator pos, const T& value)
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					return insert_after(pos, value);
 				}
 				
 				/**
@@ -427,6 +520,15 @@ namespace CPSC131
 				 */
 				void push_front(const T& value)
 				{
+					if (this->empty()){
+						this->firstElementInit(value);
+					} else{
+						Iterator itr = this->begin();
+						itr.getCursor()->setPrev(new Node<T>(value, nullptr, head_));
+						head_ = head_->getPrev();
+						++size_;
+					}
+					
 					
 				}
 				
@@ -437,7 +539,7 @@ namespace CPSC131
 				 */
 				Iterator push_back(const T& value)
 				{
-					return Iterator(nullptr, nullptr, nullptr);
+					return insert_after(this->end(), value);
 				}
 				
 				/**
@@ -447,7 +549,19 @@ namespace CPSC131
 				 */
 				void pop_front()
 				{
-					
+					if (this->empty()){
+						throw std::range_error("Cannot remove from empty list.");
+					}
+					Iterator itr = this->begin();
+					if (itr == this->last()){
+						head_ = nullptr;
+						tail_ = nullptr;
+					} else{
+						++itr;
+						delete head_;
+						head_ = itr.getCursor();
+					}
+					--size_;
 				}
 				
 				/**
@@ -457,7 +571,18 @@ namespace CPSC131
 				 */
 				void pop_back()
 				{
-					
+					if (this->empty()){
+						throw std::range_error("Cannot remove from empty list.");
+					}
+					Iterator itr = this->last();
+					if (itr == this->begin()){
+						head_ = nullptr;
+						tail_ = nullptr;
+					} else{
+						--itr;
+						tail_ = itr.getCursor();
+					}
+					if (size_ > 0) { --size_; }
 				}
 				
 				/**
@@ -467,7 +592,8 @@ namespace CPSC131
 				 */
 				T& front()
 				{
-					
+					if (this->empty()) {throw std::out_of_range("Can't access element from empty list.");}
+					return *(this->begin());
 				}
 				
 				/**
@@ -477,7 +603,8 @@ namespace CPSC131
 				 */
 				T& back()
 				{
-					
+					if (this->empty()) {throw std::out_of_range("Can't access element from empty list."); 
+					return *(this->last());
 				}
 				
 				/**
@@ -487,7 +614,12 @@ namespace CPSC131
 				 */
 				T& at(size_t index)
 				{
-					
+					Iterator itr = this->begin();
+					itr += index;
+					if (itr == this->end()){
+						throw std::range_error("Index is out of bounds.");
+					}
+					return *itr;
 				}
 				
 				/**
@@ -502,7 +634,19 @@ namespace CPSC131
 				 */
 				void reverse()
 				{
-					
+					if (size_ > 1){
+						T* temp = new T[size_];
+						for (size_t i = 0; i < size_; ++i){
+							temp[size_-1-i] = this->at(i);
+						}
+						for (size_t i = 0; i < size_; i++){
+							this->push_back(temp[i]);
+							this->pop_front();
+							temp[i].~T();
+						}
+						delete[] temp;
+						temp = nullptr;
+					}
 				}
 				
 				/**
@@ -535,6 +679,10 @@ namespace CPSC131
 				 */
 				DoublyLinkedList<T>& operator =(DoublyLinkedList<T>& other)
 				{
+					this->clear();
+					for (Iterator itr = other.begin(); itr != other.end(); ++itr){
+						this->push_back(*itr);
+					}
 					return *this;
 				}
 				
@@ -550,7 +698,16 @@ namespace CPSC131
 				 */
 				bool operator ==(DoublyLinkedList<T>& other)
 				{
+					if (this->size_ == other.size_){	
+						for (size_t i = 0; i < size_; i++){
+							if (this->at(i) != other.at(i)){
+								return false;
+							}
+						}
+						return true;
+					}
 					return false;
+					
 				}
 				
 				/**
@@ -562,16 +719,16 @@ namespace CPSC131
 				 */
 				bool operator !=(DoublyLinkedList<T>& other)
 				{
-					return false;
+					return !(*this == other);
 				}
 				
 			private:
-				
 				Node<T>* head_ = nullptr;
 				Node<T>* tail_ = nullptr;
 				size_t size_ = 0;
 		};
 	}
-}
+	}
+
 
 #endif
